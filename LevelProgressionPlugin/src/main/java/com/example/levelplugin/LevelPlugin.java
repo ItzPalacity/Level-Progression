@@ -1,8 +1,11 @@
-package com.example.levelplugin;
+package com.levelplugin;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,63 +15,56 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class LevelPlugin extends JavaPlugin implements Listener {
-    private Map<UUID, Integer> playerExp = new HashMap<>();
-    private FileConfiguration config;
+
+    private static LevelPlugin instance;
+    private LevelManager levelManager;
+    private GUIManager guiManager;
+    private ScoreboardManager scoreboardManager;
 
     @Override
     public void onEnable() {
+        instance = this;
         saveDefaultConfig();
-        config = getConfig();
-        getServer().getPluginManager().registerEvents(this, this);
-        getCommand("levelmenu").setExecutor((sender, command, label, args) -> {
-            if (sender instanceof Player) {
-                openLevelMenu((Player) sender);
+
+        this.levelManager = new LevelManager(this);
+        this.guiManager = new GUIManager(this);
+        this.scoreboardManager = new ScoreboardManager(this);
+
+        getCommand("levelmenu").setExecutor((TabExecutor) new LevelMenuCommand(this));
+        Bukkit.getPluginManager().registerEvents(guiManager, this);
+        Bukkit.getPluginManager().registerEvents(this, this);
+
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                scoreboardManager.updateScoreboard(player);
             }
-            return true;
-        });
+        }, 0L, 40L);
     }
 
-    public void addExp(Player player, int amount) {
-        UUID uuid = player.getUniqueId();
-        int currentExp = playerExp.getOrDefault(uuid, 0);
-        playerExp.put(uuid, currentExp + amount);
+    public static LevelPlugin getInstance() {
+        return instance;
     }
 
-    private int getLevel(Player player) {
-        int exp = playerExp.getOrDefault(player.getUniqueId(), 0);
-        int level = 1;
-        for (String key : config.getConfigurationSection("levels").getKeys(false)) {
-            int requiredExp = config.getInt("levels." + key);
-            if (exp >= requiredExp) {
-                level = Integer.parseInt(key);
-            }
+    public LevelManager getLevelManager() {
+        return levelManager;
+    }
+
+    public GUIManager getGUIManager() {
+        return guiManager;
+    }
+
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (sender instanceof Player player) {
+            guiManager.openLevelGUI(player, 0);
         }
-        return level;
-    }
-
-    private void openLevelMenu(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, "Level Progression");
-        int playerLevel = getLevel(player);
-        for (int i = 1; i <= 5; i++) {
-            Material material = (i <= playerLevel) ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
-            ItemStack pane = new ItemStack(material);
-            ItemMeta meta = pane.getItemMeta();
-            meta.setDisplayName("Level " + i);
-            pane.setItemMeta(meta);
-            inv.setItem(i - 1, pane);
-        }
-        player.openInventory(inv);
-    }
-
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().equals("Level Progression")) {
-            event.setCancelled(true);
-        }
+        return true;
     }
 }
