@@ -1,0 +1,49 @@
+package com.levelplugin;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager as BukkitScoreboardManager;
+
+public class ScoreboardManager {
+
+    private final LevelPlugin plugin;
+
+    public ScoreboardManager(LevelPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void updateScoreboard(Player player) {
+        BukkitScoreboardManager manager = Bukkit.getScoreboardManager();
+        Scoreboard board = manager.getNewScoreboard();
+
+        Objective obj = board.registerNewObjective("level", "dummy", ChatColor.GREEN + "Your Level");
+        obj.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+
+        int level = plugin.getLevelManager().getLevel(player);
+        int exp = plugin.getLevelManager().getExp(player);
+        int nextExp = plugin.getLevelManager().getExpToNextLevel(player);
+
+        String bar = ChatColor.YELLOW + progressBar(exp, nextExp);
+
+        Score levelScore = obj.getScore(ChatColor.AQUA + "Level: " + ChatColor.WHITE + level);
+        Score expScore = obj.getScore(ChatColor.AQUA + "EXP: " + ChatColor.WHITE + exp + "/" + nextExp);
+        Score barScore = obj.getScore(bar);
+
+        barScore.setScore(3);
+        levelScore.setScore(2);
+        expScore.setScore(1);
+
+        player.setScoreboard(board);
+    }
+
+    private String progressBar(int current, int max) {
+        if (max <= 0) return "N/A";
+        int bars = 20;
+        int filled = (int) ((double) current / max * bars);
+        return ChatColor.GREEN + "|".repeat(filled) + ChatColor.RED + "|".repeat(bars - filled);
+    }
+}
