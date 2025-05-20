@@ -1,0 +1,89 @@
+package com.example.levelplugin;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GUIManager implements Listener {
+
+    private final LevelPlugin plugin;
+
+    public GUIManager(LevelPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void openLevelGUI(Player player, int page) {
+        Inventory gui = Bukkit.createInventory(null, 54, ChatColor.DARK_GREEN + "Levels");
+        int playerLevel = plugin.getLevelManager().getLevel(player);
+        FileConfiguration config = plugin.getConfig();
+
+        for (String levelKey : config.getConfigurationSection("rewards").getKeys(false)) {
+            int level = Integer.parseInt(levelKey);
+            Material mat = (playerLevel >= level) ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
+
+            ItemStack levelItem = new ItemStack(mat);
+            ItemMeta meta = levelItem.getItemMeta();
+            meta.setDisplayName(ChatColor.GOLD + "Level " + level);
+
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.YELLOW + "Rewards:");
+            List<String> rewards = config.getStringList("rewards." + level);
+            for (String reward : rewards) {
+                lore.add(ChatColor.GRAY + "- " + reward);
+            }
+            if (playerLevel >= level) {
+                lore.add(ChatColor.GREEN + "Click to claim!");
+            } else {
+                lore.add(ChatColor.RED + "Reach level to claim.");
+            }
+
+            meta.setLore(lore);
+            levelItem.setItemMeta(meta);
+            gui.addItem(levelItem);
+        }
+
+        // Add navigation arrows (simplified to only one page for now)
+        ItemStack next = new ItemStack(Material.ARROW);
+        ItemMeta meta = next.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Next Page");
+        next.setItemMeta(meta);
+        gui.setItem(53, next);
+
+        player.openInventory(gui);
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent e) {
+        if (e.getView().getTitle().equals(ChatColor.DARK_GREEN + "Levels")) {
+            e.setCancelled(true);
+            if (!(e.getWhoClicked() instanceof Player player)) return;
+            ItemStack item = e.getCurrentItem();
+            if (item == null || !item.hasItemMeta()) return;
+
+            String display = ChatColor.stripColor(item.getItemMeta().getDisplayName());
+            if (display.startsWith("Level ")) {
+                int level = Integer.parseInt(display.split(" ")[1]);
+                if (plugin.getLevelManager().getLevel(player) >= level) {
+                    List<String> commands = plugin.getConfig().getStringList("rewards." + level);
+                    for (String cmd : commands) {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.getName()));
+                    }
+                    player.sendMessage(ChatColor.GREEN + "Claimed rewards for Level " + level + "!");
+                } else {
+                    player.sendMessage(ChatColor.RED + "You have not reached Level " + level + " yet.");
+                }
+            }
+        }
+    }
+}
