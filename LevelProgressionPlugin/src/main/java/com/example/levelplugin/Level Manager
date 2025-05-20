@@ -1,0 +1,60 @@
+package com.example.levelplugin;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class LevelManager {
+
+    private final LevelPlugin plugin;
+    private final Map<Player, Integer> expMap = new HashMap<>();
+    private final Map<Player, Integer> levelMap = new HashMap<>();
+
+    public LevelManager(LevelPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public int getExp(Player player) {
+        return expMap.getOrDefault(player, 0);
+    }
+
+    public int getLevel(Player player) {
+        return levelMap.getOrDefault(player, 1);
+    }
+
+    public void addExp(Player player, int amount) {
+        int currentExp = getExp(player) + amount;
+        int currentLevel = getLevel(player);
+
+        FileConfiguration config = plugin.getConfig();
+
+        while (config.contains("exp_per_level." + (currentLevel + 1)) &&
+                currentExp >= config.getInt("exp_per_level." + (currentLevel + 1))) {
+            currentLevel++;
+            plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(),
+                    "say " + player.getName() + " has reached Level " + currentLevel + "!");
+            // Rewards will be handled in GUI claim
+        }
+
+        expMap.put(player, currentExp);
+        levelMap.put(player, currentLevel);
+    }
+
+    public void setLevel(Player player, int level) {
+        levelMap.put(player, level);
+    }
+
+    public void setExp(Player player, int exp) {
+        expMap.put(player, exp);
+    }
+
+    public int getExpToNextLevel(Player player) {
+        int level = getLevel(player);
+        int nextLevel = level + 1;
+        FileConfiguration config = plugin.getConfig();
+        return config.contains("exp_per_level." + nextLevel) ?
+                config.getInt("exp_per_level." + nextLevel) : -1;
+    }
+}
