@@ -1,6 +1,119 @@
-levels:
+# Configuration for Level Progression Plugin
+
+exp_per_level:
   1: 0
-  2: 50
-  3: 100
-  4: 200
-  5: 400
+  2: 100
+  3: 250
+  4: 500
+  5: 800
+  6: 1200
+  7: 1700
+  8: 2300
+  9: 3000
+  10: 3800
+
+levels:
+  1:
+    name: "&aLevel 1"
+    description:
+      - "&7Welcome to Level 1!"
+      - "&fNo rewards yet. Keep progressing!"
+    rewards:
+      - "msg:&aYou reached Level 1!"
+  2:
+    name: "&aLevel 2"
+    description:
+      - "&7You've leveled up!"
+      - "&fReward: 1x Diamond"
+    rewards:
+      - "give:diamond 1"
+      - "msg:&aYou received a Diamond!"
+  3:
+    name: "&aLevel 3"
+    description:
+      - "&fYou're moving fast!"
+      - "&fReward: 5x Emeralds"
+    rewards:
+      - "give:emerald 5"
+  4:
+    name: "&aLevel 4"
+    description:
+      - "&fYou're on fire!"
+      - "&fReward: $100 Economy (example)"
+    rewards:
+      - "command:eco give {player} 100"
+  5:
+    name: "&bLevel 5"
+    description:
+      - "&fMilestone level!"
+      - "&fReward: Iron Sword"
+    rewards:
+      - "give:iron_sword 1"
+  6:
+    name: "&eLevel 6"
+    description:
+      - "&fGetting stronger!"
+    rewards:
+      - "msg:&6No item reward for this level!"
+  7:
+    name: "&6Level 7"
+    description:
+      - "&fYou're a seasoned adventurer!"
+      - "&fReward: 2x Golden Apples"
+    rewards:
+      - "give:golden_apple 2"
+  8:
+    name: "&6Level 8"
+    description:
+      - "&fImpressive progress!"
+    rewards:
+      - "msg:&6Keep going!"
+  9:
+    name: "&cLevel 9"
+    description:
+      - "&fAlmost at the top!"
+      - "&fReward: Netherite Ingot"
+    rewards:
+      - "give:netherite_ingot 1"
+  10:
+    name: "&dLevel 10"
+    description:
+      - "&lMax Level!"
+      - "&fReward: Elytra"
+    rewards:
+      - "give:elytra 1"
+      - "command:say {player} has reached the final level!"
+
+gui:
+  title: "&8Level Progress"
+  rows: 6
+  filler-item: "GRAY_STAINED_GLASS_PANE"
+
+  arrows:
+    previous:
+      slot: 45
+      item: "ARROW"
+      name: "&fPrevious Page"
+    next:
+      slot: 53
+      item: "ARROW"
+      name: "&fNext Page"
+
+  progress-item:
+    slot: 49
+    item: "EXPERIENCE_BOTTLE"
+    name: "&aYour Progress"
+    lore:
+      - "&7Level: &e{level}"
+      - "&7EXP: &e{exp}/{next_exp}"
+      - "&7Progress: &e{percent}%"
+
+scoreboard:
+  enabled: true
+  title: "&aYour Progress"
+  lines:
+    - "&7&m----------------"
+    - "&fLevel: &a{level}"
+    - "&fEXP: &e{exp}/{next_exp}"
+    - "&fProgress: &b{bar}"
+    - "&7&m----------------"
