@@ -1,0 +1,7 @@
+name: LevelProgression
+version: 1.0
+main: com.example.levelplugin.LevelPlugin
+api-version: 1.21
+commands:
+  levelmenu:
+    description: Opens the level GUI
